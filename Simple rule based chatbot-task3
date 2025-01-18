@@ -1,0 +1,104 @@
+import tkinter as tk
+from datetime import datetime
+
+# This function is used to determine the current season in India
+def get_current_season():
+    """Determines the current season based on the Indian seasonal calendar."""
+    today = datetime.now()
+    month, day = today.month, today.day
+
+    if (month == 2 and day >= 15) or (3 <= month < 4) or (month == 4 and day <= 15):
+        return "Spring"
+    elif (month == 4 and day > 15) or (5 <= month < 6) or (month == 6 and day <= 15):
+        return "Summer"
+    elif (month == 6 and day > 15) or (7 <= month < 8) or (month == 8 and day <= 15):
+        return "Monsoon"
+    elif (month == 8 and day > 15) or (9 <= month < 10) or (month == 10 and day <= 15):
+        return "Autumn"
+    elif (month == 10 and day > 15) or (11 <= month < 12) or (month == 12 and day <= 15):
+        return "Pre-Winter"
+    else:
+        return "Winter"
+
+# This function is used  to generate chatbot responses based on user input
+def generate_response(user_input):
+    """Handles the chatbot's responses."""
+    user_input = user_input.strip().lower()
+
+    if user_input in ["hello", "hi", "hey"]:
+        return "Hello! How can I help you today?"
+    if "your name" in user_input:
+        return "My name is Raja. I'm here to assist you."
+    if "how are you" in user_input:
+        return "I'm doing great! Thank you for asking. How can I assist you?"
+    if "i am fine" in user_input:
+        return "That's wonderful to hear! What can I help you with?"
+    if "time" in user_input:
+        return f"The current time is {datetime.now().strftime('%H:%M:%S')}."
+    if "date" in user_input:
+        return f"Today's date is {datetime.now().strftime('%d %B %Y')}."
+    if "season" in user_input:
+        return f"In India, the current season is {get_current_season()}."
+    if "ai" in user_input:
+        return (
+            "Artificial Intelligence (AI) involves creating systems that simulate human intelligence. "
+            "It powers applications like personal assistants, autonomous cars, and more."
+        )
+    if "python" in user_input:
+        return (
+            "Python is a versatile programming language known for its simplicity and powerful libraries. "
+            "It's widely used in AI, data science, web development, and more."
+        )
+    if "assist" in user_input:
+        return "I can help with questions about time, date, seasons, AI, Python, or general information. What would you like to know?"
+    if "thank you" in user_input or "thanks" in user_input:
+        return "You're most welcome!"
+    if "bye" in user_input or user_input in ["exit", "quit"]:
+        return "Goodbye! Have a great day!"
+    return "I'm sorry, I didn't quite catch that. Could you rephrase?"
+
+# This function to handle the "Send" button click
+def handle_send():
+    user_message = user_input.get()
+    if not user_message:
+        return
+
+    # This function is used to display user's message
+    chat_window.config(state=tk.NORMAL)
+    chat_window.insert(tk.END, f"You: {user_message}\n", "user")
+    user_input.delete(0, tk.END)
+
+    # This function is used get chatbot response
+    response = generate_response(user_message)
+    chat_window.insert(tk.END, f"Chatbot: {response}\n\n", "chatbot")
+    chat_window.config(state=tk.DISABLED)
+
+    if "goodbye" in response.lower():
+        root.after(2000, root.destroy)
+
+# This code function is used for GUI setup or Graphical interface setup
+root = tk.Tk()
+root.title("Chatbot")
+root.geometry("500x600")
+root.configure(bg="#222831")
+
+#  This function helps in working of Chat window
+chat_window = tk.Text(root, state=tk.DISABLED, bg="#393e46", fg="#eeeeee", font=("Arial", 12), wrap=tk.WORD)
+chat_window.tag_config("user", foreground="#00adb5", font=("Arial", 12, "bold"))
+chat_window.tag_config("chatbot", foreground="#f8b400", font=("Arial", 12, "italic"))
+chat_window.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+#  This function helps in Input frame
+input_frame = tk.Frame(root, bg="#222831")
+input_frame.pack(padx=10, pady=10, fill=tk.X)
+
+#  This function is used in User input field
+user_input = tk.Entry(input_frame, font=("Arial", 14), bg="#eeeeee", fg="#222831")
+user_input.pack(side=tk.LEFT, fill=tk.X, padx=5, pady=5, expand=True)
+
+#  This function is used for working of Send button
+send_button = tk.Button(root, text="Send", command=handle_send, bg="#28a745", fg="white", font=("Arial", 14, "bold"))
+send_button.pack(pady=10)
+
+# This function starts  GUI loop
+root.mainloop()
