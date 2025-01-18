@@ -1,0 +1,147 @@
+import math
+import tkinter as tk
+from tkinter import messagebox
+
+# This function is used  to check wheather a player has won the game
+def is_winner(board, player):
+    # This function checks all rows for a win in game
+    for row in board:
+        if all(cell == player for cell in row):
+            return True
+    # This function checks all columns for a win in game
+    for col in range(3):
+        if all(row[col] == player for row in board):
+            return True
+    # This function checks both diagonals for a win in game
+    if all(board[i][i] == player for i in range(3)) or all(board[i][2 - i] == player for i in range(3)):
+        return True
+    return False
+
+#This function checks if the game has ended in a draw
+def is_draw(board):
+    return all(cell != ' ' for row in board for cell in row)
+
+#  This function gets a list of all available moves (empty cells)
+def get_available_moves(board):
+    return [(r, c) for r in range(3) for c in range(3) if board[r][c] == ' ']
+
+#  We use Minimax algorithm to calculate the best move for the AI
+def minimax(board, depth, is_maximizing, alpha=-math.inf, beta=math.inf):
+    if is_winner(board, 'O'):
+        return 10 - depth  #  O gives a Positive score for AI victory
+    if is_winner(board, 'X'):
+        return depth - 10  # X gives a  Negative score for human victory
+    if is_draw(board):
+        return 0  #  no space for X and O gives a Neutral score for a draw
+
+    if is_maximizing:
+        max_eval = -math.inf
+        for move in get_available_moves(board):
+            board[move[0]][move[1]] = 'O'  # AI makes its  move
+            score = minimax(board, depth + 1, False, alpha, beta)
+            board[move[0]][move[1]] = ' '  # Undo move
+            max_eval = max(max_eval, score)
+            alpha = max(alpha, score)
+            if beta <= alpha:  # Prune remaining branches
+                break
+        return max_eval
+    else:
+        min_eval = math.inf
+        for move in get_available_moves(board):
+            board[move[0]][move[1]] = 'X'  # Player(human) make a move
+            score = minimax(board, depth + 1, True, alpha, beta)
+            board[move[0]][move[1]] = ' '  # Undo move
+            min_eval = min(min_eval, score)
+            beta = min(beta, score)
+            if beta <= alpha:
+                break
+        return min_eval
+
+#  This function helps AI  to decides the best move to make in the board
+def ai_move(board):
+    best_score = -math.inf
+    best_move = None
+    for move in get_available_moves(board):
+        board[move[0]][move[1]] = 'O'
+        score = minimax(board, 0, False)
+        board[move[0]][move[1]] = ' '
+        if score > best_score:
+            best_score = score
+            best_move = move
+    return best_move
+
+# This function Update the board and button text after a move by player
+def update_board(buttons, board, row, col, player):
+    board[row][col] = player
+    buttons[row][col].config(text=player, state="disabled", disabledforeground="blue" if player == 'X' else "red")
+
+#  This function  checks the state of the game after a  each move
+def check_game_state(board, player):
+    if is_winner(board, player):
+        return f"AI wins!" if player == 'O' else f"{player} wins!"
+    if is_draw(board):
+        return "It's a draw!"
+    return None
+
+# This function handles  the player's move
+def human_move(buttons, board, row, col, status_label):
+    update_board(buttons, board, row, col, 'X')
+    result = check_game_state(board, 'X')
+    if result:
+        messagebox.showinfo("Game Over", result)
+        reset_game(buttons, board, status_label)
+        return
+
+    status_label.config(text="AI is thinking...")
+    move = ai_move(board)
+    if move:
+        update_board(buttons, board, move[0], move[1], 'O')
+        result = check_game_state(board, 'O')
+        if result:
+            messagebox.showinfo("Game Over", result)
+            reset_game(buttons, board, status_label)
+            return
+
+    status_label.config(text="Your turn")
+
+#  This function have the connection with reset button if we press it then it Reset the game board
+def reset_game(buttons, board, status_label):
+    for r in range(3):
+        for c in range(3):
+            buttons[r][c].config(text="", state="normal")
+            board[r][c] = ' '
+    status_label.config(text="Your turn")
+
+#  This is the main function used to initialize the  entire game
+def main():
+    root = tk.Tk()
+    root.title("Tic-Tac-Toe")
+    root.configure(bg="#F8F9FA")  # Subtle background
+
+    board = [[' ' for _ in range(3)] for _ in range(3)]
+    buttons = [[None for _ in range(3)] for _ in range(3)]
+
+    frame = tk.Frame(root, bg="#F8F9FA")
+    frame.pack(pady=10)
+
+    status_label = tk.Label(root, text="Your turn", font=("Arial", 14), bg="#F8F9FA", fg="black")
+    status_label.pack()
+
+    for r in range(3):
+        for c in range(3):
+            buttons[r][c] = tk.Button(
+                frame, text="", font=("Arial", 20), width=5, height=2, bg="white",
+                command=lambda row=r, col=c: human_move(buttons, board, row, col, status_label)
+            )
+            buttons[r][c].grid(row=r, column=c, padx=5, pady=5)
+
+    reset_btn = tk.Button(
+        root, text="Reset", bg="#28A745", fg="white", font=("Arial", 12),
+        command=lambda: reset_game(buttons, board, status_label)
+    )
+    reset_btn.pack(pady=10)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
